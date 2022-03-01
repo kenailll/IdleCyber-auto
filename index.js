@@ -77,16 +77,12 @@ class IdleCyber {
 	}
 }
 
-const bestOpponent = async (email, password) => {
-    var acc = new IdleCyber(email, password); 
-    //login to account
-    await acc.login();
-
+const bestOpponent = async (accounts, whiteLists) => {
     //get opponents list
-    var opponents = await acc.getOpponents();
+    var opponents = await accounts.getOpponents();
 
     // get team LP
-    var LP = (await acc.getTeams(3)).lp;
+    var LP = (await accounts.getTeams(3)).lp;
 
     //lọc ra những opponents thuộc white list và có LP < team LP
     const intersection = whiteLists.filter(item1 => opponents.some(item2 => item1.userId === item2.userId && item1.lp < LP))
@@ -111,9 +107,13 @@ const bestOpponent = async (email, password) => {
 var email = 'social@cenog.net';
 var password = '03ba7b02916e41465bfbde946c91a8d9';
 
+//login to account
+var acc = new IdleCyber(email, password); 
+await acc.login();
+
 //get whitelist accounts
 const whiteLists = JSON.parse(await readFile('./whiteList.json')); 
 
-var aa = await bestOpponent(email, password)
+var opponent = await bestOpponent(acc, whiteLists)
 
-console.log(aa)
+console.log(opponent)
