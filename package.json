@@ -1,13 +1,6 @@
 {
   "dependencies": {
-    "axios": "^0.26.0",
-    "bull": "^4.7.0",
-    "puppeteer": "^13.4.1",
-    "puppeteer-extra": "^3.2.3",
-    "puppeteer-extra-plugin-stealth": "^2.9.0"
+    "axios": "^0.26.0"
   },
-  "type": "module",
-  "scripts": {
-    "index": "node run index.js "
-  }
+  "type": "module"
 }

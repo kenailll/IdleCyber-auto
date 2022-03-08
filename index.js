@@ -1,101 +1,119 @@
+import axios from "axios";
 import { readFile } from 'fs/promises';
-import Queue from 'bull';
-import { IdleCyber, bestOpponent, teamCastoff, saveToken } from './idlecyber.js'
-import { Browser, sleep } from './launcher.js'
 
-(async () => {
-    const keyQueue = new Queue('ProcessKey');
-    keyQueue.empty();
-
-    var browser = new Browser();
-    await browser.launch();
-
-    var whiteLists = JSON.parse(await readFile('./whiteList.json')); 
-
-    let waitingJob = {}
-    let errorJob = {}
-
-    keyQueue.process(1, async (job, done) => {
-        const data = job.data;
-        if(browser.isLogin){
-            await browser.signOut();
-        }
-        await browser.login(data.email, data.password);
-
-        browser.gamePage.on('requestfinished', async (request) => {
-            if ((request.url() == 'https://api.idlecyber.com/pvp/reward') && request.method() == 'POST'){
-                await browser.endBatle(browser.gamePage);
-                
-                //remove job if it in queue
-                waitingJob[data.email] = 0;
-                errorJob[data.email] = 0;
-                
-                console.log('order done: ', data.email)
-                console.log()
-                done()
-            } 
+class IdleCyber {
+	constructor(email, password) {
+        this.app = axios.create({
+            baseURL: 'https://api.idlecyber.com/',
         });
+	}
 
-        try{
-            if(data.isWhileList){
-                let opponent_info = whiteLists.find(obj => obj.userId == data.opponentId);
-                let opponent = new IdleCyber(opponent_info.email, opponent_info.passhash, opponent_info.token);
-                let formations = await teamCastoff(opponent);
+	async login() {
+        let params = {
+            email: email,
+            password: password
+        };
 
-                await browser.arena(data.position);
-
-                //team put on
-                await opponent.editTeams(formations, 2);
-            } else {
-                await browser.arena(data.position);
+        let postConfig = {
+            headers: {
+                'accept': 'application/json',
+                'content-type': 'application/json',
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36 Edg/98.0.1108.62',
+                'x-client-version': 18
             }
-                    
-        }catch (error){
-            //add job into error queue if error
-            errorJob[data.email] += 1;
-            console.log('order error: ', waitingJob, errorJob)
-            done(error)
-        }
-    });
+        };
 
-    while (1) {
-        for(const account_info of whiteLists){
-            if((!waitingJob[account_info.email]) || (waitingJob[account_info.email] == 1 && errorJob[account_info.email] == 5)){
-                //create Account object
-                let account = new IdleCyber(account_info.email, account_info.passhash, account_info.token);
-            
-                if(account.account.token == ''){
-                    await account.login();
-                } 
-                let state = await account.getState();
+        var res = await this.app.post('/user/login', params, postConfig);
+        this.account = res.data.data
+        return this.account.token
+	}
 
-                if(state.currentState.pvp.remainTurn != 0){
-                    let opponent = await bestOpponent(account, whiteLists);
-                    let order = {
-                        type: 'pvp',
-                        email: account_info.email,
-                        password: account_info.password
-                    };
-                    
-                    order = {...order,...opponent};
-                    
-                    waitingJob[account_info.email] = 1;
-                    errorJob[account_info.email] = 0;
-
-                    keyQueue.add(order, { 
-                        removeOnComplete: true,
-                        attempts: 5, // If job fails it will retry till 5 times
-                        backoff: 5000 // static 5 sec delay between retry
-                    });
-                    console.log('add order: ', account_info.email);
-                    console.log();
-                    //save token
-                    if(account_info.token != account.account.token){
-                        await saveToken(account, whiteLists);
-                    }
-                }                
+	async getState() {
+        let postConfig = {
+            headers: {
+                'accept': 'application/json',
+                'content-type': 'application/json',
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36 Edg/98.0.1108.62',
+                'x-client-version': 18,
+                'x-access-token': this.account.token
             }
-        }
-        await sleep(100)
+        };
+
+        var res = await this.app.get('/user/state', postConfig);
+        this.account.user.currentState = res.data.data.currentState
+        return this.account.user.currentState
+	}
+
+	async getOpponents() {
+        let postConfig = {
+            headers: {
+                'accept': 'application/json',
+                'content-type': 'application/json',
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36 Edg/98.0.1108.62',
+                'x-client-version': 18,
+                'x-access-token': this.account.token
+            }
+        };
+
+        var res = await this.app.get('/pvp/opponents', postConfig);
+        return res.data.data.opponents
+	}
+
+    //formationId = 1: campain team
+    //formationId = 2: areana defense team
+    //formationId = 3: arena attack team
+	async getTeams(formationId) {
+        let postConfig = {
+            headers: {
+                'accept': 'application/json',
+                'content-type': 'application/json',
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36 Edg/98.0.1108.62',
+                'x-client-version': 18,
+                'x-access-token': this.account.token
+            }
+        };
+        var res = await this.app.get(`user/formation?formationId=${formationId}`, postConfig);
+        return res.data.data
+	}
+}
+
+const bestOpponent = async (accounts, whiteLists) => {
+    //get opponents list
+    var opponents = await accounts.getOpponents();
+
+    // get team LP
+    var LP = (await accounts.getTeams(3)).lp;
+
+    //lọc ra những opponents thuộc white list và có LP < team LP
+    const intersection = whiteLists.filter(item1 => opponents.some(item2 => item1.userId === item2.userId && item1.lp < LP))
+
+    var opponent
+    if (intersection.length != 0){
+        //nếu có opponents thuộc white list và có LP < team LP
+        //tìm opponent có elo cao nhất
+        opponent = intersection.reduce((prev, current) => (+prev.point > +current.point) ? prev : current)
+    } else {
+        //nếu không có opponents thuộc white list
+        //lọc ra opponents có LP < team LP
+        const filter = opponents.filter(item => item.lp < LP)
+        //tìm opponent có elo cao nhất
+        opponent = filter.reduce((prev, current) => (+prev.point > +current.point) ? prev : current)
     }
-})();
+
+    return opponent
+};
+
+
+var email = 'social@cenog.net';
+var password = '03ba7b02916e41465bfbde946c91a8d9';
+
+//login to account
+var acc = new IdleCyber(email, password); 
+await acc.login();
+
+//get whitelist accounts
+const whiteLists = JSON.parse(await readFile('./whiteList.json')); 
+
+var opponent = await bestOpponent(acc, whiteLists)
+
+console.log(opponent)
