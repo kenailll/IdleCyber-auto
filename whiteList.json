@@ -1,16 +1,9 @@
 [
     {
-        "email": "social@cenog.net",
-        "password": "123123123",
-        "passhash": "03ba7b02916e41465bfbde946c91a8d9",
-        "userId": "621667c4d1caf63e80c55aea",
-        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjIxNjY3YzRkMWNhZjYzZTgwYzU1YWVhIiwiZW1haWwiOiJzb2NpYWxAY2Vub2cubmV0IiwiaWF0IjoxNjQ2NzUwNTU2fQ.V-fH3Gv_Pv0fZoyV2mug8vhAcIseGeWXz1BBYKdaaPQ"
-    },
-    {
-        "email": "hongminh018@gmail.com",
-        "password": "123123123",
-        "passhash": "03ba7b02916e41465bfbde946c91a8d9",
-        "userId": "62148f4fd1caf63e80bb7f0c",
-        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjIxNDhmNGZkMWNhZjYzZTgwYmI3ZjBjIiwiZW1haWwiOiJob25nbWluaDAxOEBnbWFpbC5jb20iLCJpYXQiOjE2NDY3NDk4ODd9.6wMwmGnt3qrAa-p0IwKGBfS-FjWsFtDRtx4Cy7RkqC0"
+        "email": "",
+        "password": "",
+        "passhash": "",
+        "userId": "",
+        "token": ""
     }
 ]
