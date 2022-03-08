@@ -125,7 +125,8 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
-whiteList.json
-whiteList.json
+
 test.js
+whiteList.json
+*.json
 whiteList.json
