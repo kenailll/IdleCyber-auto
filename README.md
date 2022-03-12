@@ -6,6 +6,7 @@ Thêm thông tin tài khoản vào file whileList.json theo mẫu
         "password": "", 
         "passhash": "",
         "userId": "",
+        "mission": "",
         "token": ""
     }
 ]
