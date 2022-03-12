@@ -26,12 +26,6 @@ import { Browser, sleep } from './launcher.js'
         
         await browser.login(data.email, data.password);
 
-        browser.gamePage.on('response', async (response) => {
-            if (request.url() == 'https://api.idlecyber.com/pvp/fight' && request.method() == 'POST'){
-                console.log(response.json())
-            }
-        });
-
         browser.gamePage.on('requestfinished', async (request) => {
             if (request.url() == 'https://api.idlecyber.com/pvp/reward' && request.method() == 'POST'){
                 await browser.endArena();
