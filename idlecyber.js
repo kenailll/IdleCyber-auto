@@ -21,7 +21,7 @@ class IdleCyber {
                 'accept': 'application/json',
                 'content-type': 'application/json',
                 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36 Edg/98.0.1108.62',
-                'x-client-version': 19,
+                'x-client-version': 20,
             },
             // httpsAgent: agent,
         };
@@ -42,7 +42,7 @@ class IdleCyber {
                 'accept': 'application/json; charset=utf-8',
                 'content-type': 'application/json',
                 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36 Edg/98.0.1108.62',
-                'x-client-version': 19
+                'x-client-version': 20
             },
             // httpsAgent: agent,
         };
@@ -64,6 +64,19 @@ class IdleCyber {
             await this.getState();
         }
         return this.account.user
+	}
+
+	async getMission(mission, result) {
+        var res = await this.app.get(`/mission/${mission}`, this.postConfig);
+        if(res.data.code == '0'){
+            result = res.data
+        } else if (res.data.code == '23'){
+            result = await this.getMission(missionDown(mission, 1), result)
+        } else {
+            await this.login();
+            result = await this.getMission(mission, result);
+        }
+        return result
 	}
 
 	async getOpponents(result) {
@@ -154,6 +167,19 @@ const bestOpponent = async (account, whiteLists) => {
     return {opponentId: opponent.userId, position: opponentIndex, isWhileList: isWhileList}
 };
 
+const bestOpponentx = async (account) => {
+    //get opponents list
+    var opponents = await account.getOpponents();
+
+    for(const opponent of opponents){
+        opponent.point = parseInt(opponent.point.replace('XX', '00'))
+    }
+
+    var opponent = opponents.reduce((prev, current) => (+prev.point < +current.point) ? prev : current) 
+    var opponentIndex = opponents.findIndex((obj => obj == opponent));
+    return opponentIndex
+};
+
 
 //accounts: IdleCyber object
 const teamCastoff = async (accounts) => {
@@ -193,4 +219,22 @@ const saveToken = async (account, whiteLists) => {
     await writeFile('./whiteList.json', JSON.stringify(whiteLists, '', 4))
 };
 
-export { IdleCyber, bestOpponent, teamCastoff, saveToken }
+
+function missionDown(mission, step) {
+    mission = parseInt(mission);
+    for(var i=0; i<step; i++){
+        if(mission == 1001){
+            return `${mission}`
+        }
+    
+        if((mission - 1) % 1000 == 0){
+            mission = mission - 1 - 1000 + 6;
+        } else {
+            mission -= 1;
+        }
+    }
+    return `${mission}`
+}
+
+export { IdleCyber, bestOpponent, bestOpponentx, teamCastoff, saveToken, missionDown }
+
