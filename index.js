@@ -60,18 +60,6 @@ import { Browser, sleep } from './launcher.js'
                 await browser.campain(data.mission);
             } else {
                 await browser.arena(data.position);
-                // if(data.isWhileList){
-                //     let opponent_info = whiteLists.find(obj => obj.userId == data.opponentId);
-                //     let opponent = new IdleCyber(opponent_info.email, opponent_info.passhash, opponent_info.token);
-                //     let formations = await teamCastoff(opponent);
-    
-                //     await browser.arena(data.position);
-    
-                //     //team put on
-                //     await opponent.editTeams(formations, 2);
-                // } else {
-                //     await browser.arena(data.position);
-                // }
             }                    
         }catch (error){
             //add job into error queue if error
@@ -98,11 +86,11 @@ import { Browser, sleep } from './launcher.js'
                 if(state.currentState.mission.remainTurn != 0){
                     let mission;
                     if(account_info.mission == ''){
-                        mission = await account.getMission(state.currentState.mission.currentMission)
+                        mission = state.currentState.mission.currentMission
                     } else {
-                        mission = await account.getMission(account_info.mission)
+                        mission = account_info.mission
                     }
-                   
+                    
                     order = {
                         type: 'pve',
                         email: account_info.email,

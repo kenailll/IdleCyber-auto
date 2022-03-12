@@ -35,18 +35,22 @@ class Browser {
 
             this.gamePage.on('request', request => {
                 if (request.url().indexOf("mission") !== -1 && request.method() == 'GET') {
+                    // request.respond({
+                    //     content: 'application/json',
+                    //     headers: {
+                    //         'access-control-allow-headers': '*',
+                    //         'access-control-allow-origin': '*',
+                    //         'content-encoding': 'br',
+                    //         'content-type': 'application/json; charset=utf-8',
+                    //     },
+                    //     body: JSON.stringify(this.pveMission)
+                    // })
+                    var url = `https://api.idlecyber.com/mission/${this.pveMission}`
+                    console.log(url)
+                    request.continue({url: url});
+                } else if (request.url().indexOf("buyPveAutoItem") !== -1) {
                     request.respond({
-                        content: 'application/json',
-                        headers: {
-                            'access-control-allow-headers': '*',
-                            'access-control-allow-origin': '*',
-                            'content-encoding': 'br',
-                            'content-type': 'application/json; charset=utf-8',
-                        },
-                        body: JSON.stringify(this.pveMission)
-                    })
-                } else if (request.url().indexOf("buyPveAutoItem") !== -1 && request.method() == 'POST') {
-                    request.respond({
+                        status: 200,
                         content: 'application/json',
                         headers: {
                             'access-control-allow-headers': '*',
@@ -191,30 +195,32 @@ class Browser {
 
 
 export { Browser, sleep }
-// import { IdleCyber, bestOpponent, teamCastoff, saveToken } from './idlecyber.js'
+import { IdleCyber, bestOpponent, teamCastoff, saveToken } from './idlecyber.js'
 // ;(async () => {
-//     var opponents = [{"point":"12XX"},{"point":"16XX"},{"point":"13XX"}]
+// //     var opponents = [{"point":"12XX"},{"point":"16XX"},{"point":"13XX"}]
 
-//     for(const opponent of opponents){
-//         opponent.point = parseInt(opponent.point.replace('XX', '00'))
-//     }
+// //     for(const opponent of opponents){
+// //         opponent.point = parseInt(opponent.point.replace('XX', '00'))
+// //     }
 
-//     var opponent = opponents.reduce((prev, current) => (+prev.point < +current.point) ? prev : current) 
-//     var opponentIndex = opponents.findIndex((obj => obj == opponent));
-//     console.log(opponentIndex)
-//     // var browser = new Browser();
-//     // let acc = new IdleCyber('social@cenog.net', '03ba7b02916e41465bfbde946c91a8d9', '');
-//     // var mission = await acc.getMission(4005)
-//     // console.log(mission)
-//     // await browser.launch();
-//     // // await browser.login('k79pro@gmail.com', '123123123');
-//     // await browser.login('social@cenog.net', '123123123');
-
-//     // await browser.campain(mission);
+// //     var opponent = opponents.reduce((prev, current) => (+prev.point < +current.point) ? prev : current) 
+// //     var opponentIndex = opponents.findIndex((obj => obj == opponent));
+// //     console.log(opponentIndex)
+// //     // var browser = new Browser();
+//     let acc = new IdleCyber('social@cenog.net', '03ba7b02916e41465bfbde946c91a8d9', '');
+//     var mission = await acc.getState()
     
-//     // await browser.signOut();
+// //     // var mission = await acc.getMission(4005)
+//     console.log(mission)
+// //     // await browser.launch();
+// //     // // await browser.login('k79pro@gmail.com', '123123123');
+// //     // await browser.login('social@cenog.net', '123123123');
 
-//     // await browser.arena(2, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjIxNDhmNGZkMWNhZjYzZTgwYmI3ZjBjIiwiZW1haWwiOiJob25nbWluaDAxOEBnbWFpbC5jb20iLCJpYXQiOjE2NDY3MzkyNDh9.i_5_w9nUk8A1jHAXsfuZ8QfNyf5x1ciVuPPtWgkSXYs')
+// //     // await browser.campain(mission);
+    
+// //     // await browser.signOut();
+
+// //     // await browser.arena(2, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjIxNDhmNGZkMWNhZjYzZTgwYmI3ZjBjIiwiZW1haWwiOiJob25nbWluaDAxOEBnbWFpbC5jb20iLCJpYXQiOjE2NDY3MzkyNDh9.i_5_w9nUk8A1jHAXsfuZ8QfNyf5x1ciVuPPtWgkSXYs')
 // })()
 
 
