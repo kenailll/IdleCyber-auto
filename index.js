@@ -1,4 +1,5 @@
-import { readFile } from 'fs/promises';
+// import { readFile } from 'fs/promises';
+import { promises as fs } from 'fs'
 import Queue from 'bull';
 import { IdleCyber, bestOpponent, bestOpponentx, teamCastoff, saveToken } from './idlecyber.js'
 import { Browser, sleep } from './launcher.js'
@@ -10,7 +11,7 @@ import { Browser, sleep } from './launcher.js'
     var browser = new Browser();
     await browser.launch();
 
-    var whiteLists = JSON.parse(await readFile('./whiteList.json')); 
+    var whiteLists = JSON.parse(await fs.readFile('./whiteList.json')); 
 
     let waitingJob = {}
 
@@ -24,6 +25,12 @@ import { Browser, sleep } from './launcher.js'
         }
         
         await browser.login(data.email, data.password);
+
+        browser.gamePage.on('response', async (response) => {
+            if (request.url() == 'https://api.idlecyber.com/pvp/fight' && request.method() == 'POST'){
+                console.log(response.json())
+            }
+        });
 
         browser.gamePage.on('requestfinished', async (request) => {
             if (request.url() == 'https://api.idlecyber.com/pvp/reward' && request.method() == 'POST'){
@@ -83,7 +90,7 @@ import { Browser, sleep } from './launcher.js'
                 let order;
                 
                 //mission
-                if(state.currentState.mission.remainTurn != 0){
+                if(state.currentState.mission.remainTurn == 0){
                     let mission;
                     if(account_info.mission == ''){
                         mission = state.currentState.mission.currentMission

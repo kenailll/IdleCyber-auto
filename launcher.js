@@ -35,18 +35,7 @@ class Browser {
 
             this.gamePage.on('request', request => {
                 if (request.url().indexOf("mission") !== -1 && request.method() == 'GET') {
-                    // request.respond({
-                    //     content: 'application/json',
-                    //     headers: {
-                    //         'access-control-allow-headers': '*',
-                    //         'access-control-allow-origin': '*',
-                    //         'content-encoding': 'br',
-                    //         'content-type': 'application/json; charset=utf-8',
-                    //     },
-                    //     body: JSON.stringify(this.pveMission)
-                    // })
                     var url = `https://api.idlecyber.com/mission/${this.pveMission}`
-                    console.log(url)
                     request.continue({url: url});
                 } else if (request.url().indexOf("buyPveAutoItem") !== -1) {
                     request.respond({
@@ -63,7 +52,7 @@ class Browser {
                     request.continue();
                 } 
             });
-
+            
             await this.gamePage.goto('https://play.idlecyber.com/');
             await this.gamePage.waitForSelector('#loading-cover', {hidden : true, timeout: 0});
             await sleep(5000);

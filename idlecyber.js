@@ -1,10 +1,6 @@
 import axios from "axios";
-import { writeFile } from 'fs/promises';
-// import https_proxy from 'https-proxy-agent';
-// const { HttpsProxyAgent } = https_proxy;
-
-// var agent = new HttpsProxyAgent('http://127.0.0.1:8080/');
-
+// import { writeFile } from 'fs/promises';
+import { promises as fs } from 'fs'
 
 class IdleCyber {
 	constructor(email, password, token) {
@@ -216,7 +212,7 @@ const saveToken = async (account, whiteLists) => {
         whiteLists[accountIndex].token = account.account.token;
     }
 
-    await writeFile('./whiteList.json', JSON.stringify(whiteLists, '', 4))
+    await fs.writeFile('./whiteList.json', JSON.stringify(whiteLists, '', 4))
 };
 
 
