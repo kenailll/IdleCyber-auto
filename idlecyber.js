@@ -22,7 +22,7 @@ class IdleCyber {
             // httpsAgent: agent,
         };
 
-        if(token != ''){
+        if(token != '' && token != 0){
             this.postConfig.headers['x-access-token'] = token;
         }
 	}
@@ -44,11 +44,13 @@ class IdleCyber {
         };
 
         var res = await this.app.post('/user/login', params, postConfig);
-        
-        this.account = res.data.data
-        this.postConfig.headers['x-access-token'] = this.account.token
-
-        return this.account.token
+        if(res.data.code == '0'){
+            this.account = res.data.data
+            this.postConfig.headers['x-access-token'] = this.account.token
+    
+            return this.account.token
+        }
+        return 0
 	}
 
 	async getState() {
@@ -56,8 +58,12 @@ class IdleCyber {
             var res = await this.app.get('/user/state', this.postConfig);
             this.account.user.currentState = res.data.data.currentState
         } catch (error) {
-            await this.login();
-            await this.getState();
+            let loginState = await this.login();
+            if(loginState){
+                await this.getState();
+            } else {
+                this.account.user = 0
+            }
         }
         return this.account.user
 	}
@@ -163,9 +169,18 @@ const bestOpponent = async (account, whiteLists) => {
     return {opponentId: opponent.userId, position: opponentIndex, isWhileList: isWhileList}
 };
 
-const bestOpponentx = async (account) => {
+const bestOpponentx = async (account, whiteLists) => {
     //get opponents list
-    var opponents = await account.getOpponents();
+    var opponents = (await account.getState()).currentState.pvp.opponents.split(',');
+    var LP = (await account.getTeams(3)).lp;
+    
+    for(var i=0; i<3; i++){
+        if(whiteLists[opponents[i]] != undefined && whiteLists[opponents[i]] < LP){
+            return i
+        }
+    }
+
+    opponents = await account.getOpponents();
 
     for(const opponent of opponents){
         opponent.point = parseInt(opponent.point.replace('XX', '00'))
