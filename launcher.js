@@ -60,6 +60,7 @@ class Browser {
             this.gamePage.on('requestfinished', async (request) => {
                 if (request.url() == 'https://api.idlecyber.com/pvp/fight' && request.method() == 'POST'){
                     let opponent_data = await request.response().json();
+                    console.log(opponent_data)
                     let lpTotal = 0;
                     for(const nft of opponent_data.data.opponent){
                         try {

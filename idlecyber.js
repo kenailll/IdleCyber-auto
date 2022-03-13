@@ -169,9 +169,15 @@ const bestOpponent = async (account, whiteLists) => {
     return {opponentId: opponent.userId, position: opponentIndex, isWhileList: isWhileList}
 };
 
-const bestOpponentx = async (account, whiteLists) => {
+const bestOpponentx = async (account, state, whiteLists) => {
     //get opponents list
-    var opponents = (await account.getState()).currentState.pvp.opponents.split(',');
+    var opponents
+    if(state.currentState.pvp.opponents){
+        opponents = state.currentState.pvp.opponents.split(',');
+    } else {
+        return 0
+    }
+    console.log(opponents)
     var LP = (await account.getTeams(3)).lp;
     
     for(var i=0; i<3; i++){
