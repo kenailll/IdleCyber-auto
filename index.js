@@ -70,7 +70,13 @@ import { Browser, sleep } from './launcher.js'
                         let saveOpponents = JSON.parse(await fs.readFile('./opponents.json')); 
 
                         let opponentIndex = await bestOpponentx(account, state, saveOpponents);
-                        let opponents = state.currentState.pvp.opponents.split(',')
+                        let opponents
+                        if(state.currentState.pvp.opponents){
+                             opponents = state.currentState.pvp.opponents.split(',')
+                        } else {
+                            opponents = [0,0,0]
+                        }                        
+                        
                         order = {
                             type: 'pvp',
                             email: account_info.email,
