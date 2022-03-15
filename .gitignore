@@ -128,5 +128,3 @@ dist
 
 test.js
 whiteList.json
-*.json
-whiteList.json

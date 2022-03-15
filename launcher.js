@@ -23,6 +23,7 @@ class Browser {
 
     async launch() {
         try {
+            this.summary = JSON.parse(await fs.readFile('./summary.json')); 
             this.browser = await puppeteer.launch({
                 args: [
                     '--window-size=600,900'
@@ -74,7 +75,23 @@ class Browser {
                 }
 
                 if (request.url() == 'https://api.idlecyber.com/pvp/reward' && request.method() == 'POST'){
-					await sleep(4000);
+                    let date = new Date().toLocaleDateString()
+                    let reward_data = await request.response().json();
+
+                    if(this.summary[this.tmpEmail] == undefined){
+                        this.summary[this.tmpEmail] = {}
+                    }
+
+                    if(this.summary[this.tmpEmail][date] == undefined){
+                        this.summary[this.tmpEmail][date] = {mIDLE: 0, exp: 0}
+                    }
+
+                    this.summary[this.tmpEmail][date].mIDLE += reward_data.data.rewards[0].amount
+                    this.summary[this.tmpEmail][date].exp += reward_data.data.rewards[1].amount
+
+                    await fs.writeFile('./summary.json', JSON.stringify(this.summary, '', 4))
+
+					await sleep(3000);
                     await this.endArena();
                     await this.signOut();
                     
@@ -91,7 +108,23 @@ class Browser {
                 }
                 
                 if (request.url() == 'https://api.idlecyber.com/mission_reward' && request.method() == 'POST'){
-					await sleep(4000);
+                    let date = new Date().toLocaleDateString()
+                    let reward_data = await request.response().json();
+
+                    if(this.summary[this.tmpEmail] == undefined){
+                        this.summary[this.tmpEmail] = {}
+                    }
+
+                    if(this.summary[this.tmpEmail][date] == undefined){
+                        this.summary[this.tmpEmail][date] = {mIDLE: 0, exp: 0}
+                    }
+
+                    this.summary[this.tmpEmail][date].mIDLE += reward_data.data.rewards[0].amount
+                    this.summary[this.tmpEmail][date].exp += reward_data.data.rewards[1].amount
+
+                    await fs.writeFile('./summary.json', JSON.stringify(this.summary, '', 4))
+
+					await sleep(3000);
                     await this.endMission();
                     await this.signOut();
 
@@ -108,7 +141,7 @@ class Browser {
                 }
 
                 if (request.url() == 'https://api.idlecyber.com/pvp/opponents' && request.method() == 'GET' && this.opponentIndex != null){
-                await sleep(1000);
+                    await sleep(1000);
                     //opponent
                     switch (this.opponentIndex) {
                         case 0:
@@ -133,11 +166,11 @@ class Browser {
 
                     //fight
                     await this.gamePage.mouse.click(290, 650, { button: 'left' });
-                    await sleep(3000);
+                    await sleep(4000);
 
                     //buy auto
                     await this.gamePage.mouse.click(475, 65, { button: 'left' });
-                    await sleep(500);
+                    await sleep(1000);
         
                     await this.gamePage.mouse.click(290, 440, { button: 'left' });
                     this.pveMission = null;
@@ -253,33 +286,3 @@ class Browser {
 
 
 export { Browser, sleep }
-// import { IdleCyber, bestOpponent, teamCastoff, saveToken } from './idlecyber.js'
-// ;(async () => {
-// //     var opponents = [{"point":"12XX"},{"point":"16XX"},{"point":"13XX"}]
-
-// //     for(const opponent of opponents){
-// //         opponent.point = parseInt(opponent.point.replace('XX', '00'))
-// //     }
-
-// //     var opponent = opponents.reduce((prev, current) => (+prev.point < +current.point) ? prev : current) 
-// //     var opponentIndex = opponents.findIndex((obj => obj == opponent));
-// //     console.log(opponentIndex)
-// //     // var browser = new Browser();
-    // let acc = new IdleCyber('social@cenog.net', '03ba7b02916e41465bfbde946c91a8d', '');
-    // console.log((await acc.login()))
-    // var mission = await acc.getState()
-    
-// //     // var mission = await acc.getMission(4005)
-    // console.log(mission)
-// //     // await browser.launch();
-// //     // // await browser.login('k79pro@gmail.com', '123123123');
-// //     // await browser.login('social@cenog.net', '123123123');
-
-// //     // await browser.campain(mission);
-    
-// //     // await browser.signOut();
-
-// //     // await browser.arena(2, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjIxNDhmNGZkMWNhZjYzZTgwYmI3ZjBjIiwiZW1haWwiOiJob25nbWluaDAxOEBnbWFpbC5jb20iLCJpYXQiOjE2NDY3MzkyNDh9.i_5_w9nUk8A1jHAXsfuZ8QfNyf5x1ciVuPPtWgkSXYs')
-// })()
-
-

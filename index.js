@@ -31,7 +31,7 @@ import { Browser, sleep } from './launcher.js'
 
     while (1) {
 		const ique = (await keyQueue.count());
-        if(ique<1){
+        if(ique < 1){
             for(const account_info of whiteLists){
                 if((!browser.waitingJob[account_info.email])){
                     //create Account object
@@ -51,8 +51,7 @@ import { Browser, sleep } from './launcher.js'
                     }
     
                     let order;
-                    console.log(state.currentState.pvp.remainTurn);
-                    console.log(state.currentState.mission.remainTurn);
+
                     if(state.currentState.mission.remainTurn != 0){                    // mission
                         let mission;
                         if(account_info.mission == ''){
@@ -75,7 +74,7 @@ import { Browser, sleep } from './launcher.js'
                         let opponentIndex = await bestOpponentx(account, state, saveOpponents);
                         let opponents
                         if(state.currentState.pvp.opponents){
-                             opponents = state.currentState.pvp.opponents.split(',')
+                            opponents = state.currentState.pvp.opponents.split(',')
                         } else {
                             opponents = [0,0,0]
                         }                        
