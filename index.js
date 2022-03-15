@@ -30,7 +30,8 @@ import { Browser, sleep } from './launcher.js'
     });
 
     while (1) {
-        if(!(await keyQueue.count())){
+		const ique = (await keyQueue.count());
+        if(ique<1){
             for(const account_info of whiteLists){
                 if((!browser.waitingJob[account_info.email])){
                     //create Account object
@@ -42,14 +43,16 @@ import { Browser, sleep } from './launcher.js'
                             continue
                         }
                         account_info.userId = account.account.user._id;
-                    } 
+                    }
+					await account.getQuests();
                     let state = await account.getState();
                     if(state == 0){
                         continue
                     }
     
                     let order;
-                    
+                    console.log(state.currentState.pvp.remainTurn);
+                    console.log(state.currentState.mission.remainTurn);
                     if(state.currentState.mission.remainTurn != 0){                    // mission
                         let mission;
                         if(account_info.mission == ''){
@@ -98,9 +101,10 @@ import { Browser, sleep } from './launcher.js'
                         
                     //save token
                     if(account_info.token != account.account.token){
-                        await saveToken(account, whiteLists);
+                        whiteLists = await saveToken(account, whiteLists);
                     }
                 }
+				console.log(account_info.token);
             }
         }
         await sleep(500)

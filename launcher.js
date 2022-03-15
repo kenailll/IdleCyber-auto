@@ -74,6 +74,7 @@ class Browser {
                 }
 
                 if (request.url() == 'https://api.idlecyber.com/pvp/reward' && request.method() == 'POST'){
+					await sleep(4000);
                     await this.endArena();
                     await this.signOut();
                     
@@ -90,6 +91,7 @@ class Browser {
                 }
                 
                 if (request.url() == 'https://api.idlecyber.com/mission_reward' && request.method() == 'POST'){
+					await sleep(4000);
                     await this.endMission();
                     await this.signOut();
 

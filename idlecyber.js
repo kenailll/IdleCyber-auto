@@ -53,11 +53,38 @@ class IdleCyber {
         return 0
 	}
 
+	async getQuests() {
+        try {
+            var res = await this.app.get('/quests', this.postConfig);
+			for (const q of res.data.data.quests) {
+				if (q.status == "done") {
+					let params = {
+						questId: q.questId
+					};
+					const qres = await this.app.post(`/quest/claim`, params, this.postConfig);
+					if(qres.data.code == '0'){
+						console.log('q.questId Done Claimed')	
+					}
+				}
+			}
+        } catch (error) {
+			console.log(error);
+            let loginState = await this.login();
+            if(loginState){
+                await this.getState();
+            } else {
+                this.account.user = 0
+            }
+        }
+        return this.account.user
+	}
+	
 	async getState() {
         try {
             var res = await this.app.get('/user/state', this.postConfig);
             this.account.user.currentState = res.data.data.currentState
         } catch (error) {
+			console.log(error);
             let loginState = await this.login();
             if(loginState){
                 await this.getState();
@@ -86,6 +113,7 @@ class IdleCyber {
             var res = await this.app.get('/pvp/opponents', this.postConfig);
             result = res.data.data.opponents
         } catch (error) {
+			console.log(error);
             await this.login();
             result = await this.getOpponents(result);
         }
@@ -234,6 +262,7 @@ const saveToken = async (account, whiteLists) => {
     }
 
     await fs.writeFile('./whiteList.json', JSON.stringify(whiteLists, '', 4))
+	return whiteLists;
 };
 
 
