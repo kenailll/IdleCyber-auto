@@ -3,54 +3,25 @@ import axios from "axios";
 import { promises as fs } from 'fs'
 
 class IdleCyber {
-	constructor(email, password, token) {
+	constructor(email, token, accountData) {
         this.app = axios.create({
             baseURL: 'https://api.idlecyber.com/',
         });
-        this.account = {};
+        this.account = accountData;
         this.email = email;
-        this.password = password;
         this.account.token = token;
-
         this.postConfig = {
             headers: {
                 'accept': 'application/json',
                 'content-type': 'application/json',
                 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36 Edg/98.0.1108.62',
-                'x-client-version': 20,
+                'x-client-version': 27,
             },
-            // httpsAgent: agent,
         };
 
         if(token != '' && token != 0){
             this.postConfig.headers['x-access-token'] = token;
         }
-	}
-
-	async login() {
-        let params = {
-            email: this.email,
-            password: this.password
-        };
-
-        let postConfig = {
-            headers: {
-                'accept': 'application/json; charset=utf-8',
-                'content-type': 'application/json',
-                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36 Edg/98.0.1108.62',
-                'x-client-version': 20
-            },
-            // httpsAgent: agent,
-        };
-
-        var res = await this.app.post('/user/login', params, postConfig);
-        if(res.data.code == '0'){
-            this.account = res.data.data
-            this.postConfig.headers['x-access-token'] = this.account.token
-    
-            return this.account.token
-        }
-        return 0
 	}
 
 	async getQuests() {
@@ -63,34 +34,22 @@ class IdleCyber {
 					};
 					const qres = await this.app.post(`/quest/claim`, params, this.postConfig);
 					if(qres.data.code == '0'){
-						console.log('q.questId Done Claimed')	
+						console.log(`${q.questId} Done Claimed`)	
 					}
 				}
 			}
         } catch (error) {
-			console.log(error);
-            let loginState = await this.login();
-            if(loginState){
-                await this.getState();
-            } else {
-                this.account.user = 0
-            }
+			console.log(this.email, "error getQuests()");
         }
-        return this.account.user
+        return
 	}
 	
 	async getState() {
         try {
             var res = await this.app.get('/user/state', this.postConfig);
-            this.account.user.currentState = res.data.data.currentState
+            this.account.user.currentState = res.data.data.currentState;
         } catch (error) {
-			console.log(error);
-            let loginState = await this.login();
-            if(loginState){
-                await this.getState();
-            } else {
-                this.account.user = 0
-            }
+			console.log(this.email, "error getState()");
         }
         return this.account.user
 	}
@@ -102,8 +61,7 @@ class IdleCyber {
         } else if (res.data.code == '23'){
             result = await this.getMission(missionDown(mission, 1), result)
         } else {
-            await this.login();
-            result = await this.getMission(mission, result);
+			console.log(this.email, "error getMission()");
         }
         return result
 	}
@@ -113,9 +71,10 @@ class IdleCyber {
             var res = await this.app.get('/pvp/opponents', this.postConfig);
             result = res.data.data.opponents
         } catch (error) {
-			console.log(error);
-            await this.login();
-            result = await this.getOpponents(result);
+			console.log(this.email, "error getOpponents()");
+			//console.log(error);
+            // await this.login();
+            // result = await this.getOpponents(result);
         }
         return result
 	}
@@ -130,8 +89,9 @@ class IdleCyber {
         if(res.data.code == '0'){
             result = res.data
         } else {
-            await this.login();
-            result = await this.getTeams(formationId, result);
+			console.log(this.email, "error getTeams()");
+            // await this.login();
+            // result = await this.getTeams(formationId, result);
         }
         return result
 	}
@@ -152,8 +112,9 @@ class IdleCyber {
         if(res.data.code == '0'){
             result = res.data
         } else {    
-            await this.login();
-            result = await this.editTeams(formation, formationId, result);
+			console.log(this.email, "error editTeams()");
+            // await this.login();
+            // result = await this.editTeams(formation, formationId, result);
         }
         return result
 	}
@@ -205,15 +166,20 @@ const bestOpponentx = async (account, state, whiteLists) => {
     } else {
         return 0
     }
-    console.log(opponents)
     var LP = (await account.getTeams(3)).lp;
-    
+	
     for(var i=0; i<3; i++){
         if(whiteLists[opponents[i]] != undefined && whiteLists[opponents[i]] < LP){
-            return i
+            return i;
         }
     }
 
+    for(var i=0; i<3; i++){
+        if(whiteLists[opponents[i]] == undefined){
+            return i;
+        }
+    }
+	
     opponents = await account.getOpponents();
 
     for(const opponent of opponents){
@@ -222,7 +188,7 @@ const bestOpponentx = async (account, state, whiteLists) => {
 
     var opponent = opponents.reduce((prev, current) => (+prev.point < +current.point) ? prev : current) 
     var opponentIndex = opponents.findIndex((obj => obj == opponent));
-    return opponentIndex
+    return opponentIndex;
 };
 
 

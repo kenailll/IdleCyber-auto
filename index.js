@@ -1,111 +1,149 @@
 // import { readFile } from 'fs/promises';
 import { promises as fs } from 'fs'
 import Queue from 'bull';
-import { IdleCyber, bestOpponent, bestOpponentx, teamCastoff, saveToken } from './idlecyber.js'
-import { Browser, sleep } from './launcher.js'
+import { IdleCyber, bestOpponentx, teamCastoff, saveToken } from './idlecyber.js'
+import { Browser, sleep } from './launcher720.js'
+import { scheduleJob } from 'node-schedule';
+
+async function doJobs(whiteLists, queue) {
+	for(const account_info of whiteLists){
+		const order = {
+			email: account_info.email,
+			password: account_info.password
+		};
+		console.log(order);
+		await queue.add(order, { 
+			removeOnComplete: true
+		});
+	}
+}
 
 (async () => {
     const keyQueue = new Queue('ProcessKey');
-    keyQueue.empty();
+    const workerQueue = new Queue('WorkerKey');
 
-    var browser = new Browser();
-    await browser.launch();
+	await keyQueue.obliterate({ force: true });
+	await workerQueue.obliterate({ force: true });
 
-    var whiteLists = JSON.parse(await fs.readFile('./whiteList.json')); 
+	await sleep(1000)
+	let wBrowser = {}
+	const whiteLists = JSON.parse(await fs.readFile('./whiteList.json')); 
 
-    keyQueue.process(1, async (job, done) => {
+	//Browser init-login
+    keyQueue.process(2, async (job, done) => {
         const data = job.data;
+		const email = data.email;
+		const password = data.password;
 
-        if(browser.isLogin){
-            await browser.signOut();
-        }
+		var browser = new Browser(email, password);
+		wBrowser[email] = browser;
+		browser.launch();
+		
+		while(true){
+			if (browser.runningJob == 1 && browser.tmpToken != null){
+				browser.runningJob = 2;
+				await workerQueue.add({email: email}, { 
+					removeOnComplete: true
+				});
+			}
+			if (browser.runningJob == 3){
+				//log reports
+				let reports = JSON.parse(await fs.readFile('./reports.json')); 
+				let date = new Date().toLocaleDateString();
 
-        await browser.login(data.email, data.password);
-
-        if(data.type == 'pve'){
-            await browser.campain(data.mission, data.email, done);
-        } else {
-            await browser.arena(data.position, data.opponent, data.email, done);
-        } 
+				if(reports[email] == undefined){
+					reports[email] = {};
+				}
+		
+				if(reports[email][date] == undefined){
+					reports[email][date] = browser.reports;
+				} else {
+					reports[email][date].mIDLE = browser.reports.mIDLE;
+					reports[email][date].exp = browser.reports.exp;
+				}
+				await fs.writeFile('./reports.json', JSON.stringify(reports, '', 4))
+				
+				break;
+			}
+			await sleep(1000)
+		}
+		done();
     });
 
-    while (1) {
-		const ique = (await keyQueue.count());
-        if(ique < 1){
-            for(const account_info of whiteLists){
-                if((!browser.waitingJob[account_info.email])){
-                    //create Account object
-                    let account = new IdleCyber(account_info.email, account_info.passhash, account_info.token);
-                    
-                    if(account.account.token == ''){
-                        account_info.token = await account.login();
-                        if(account_info.token == 0){
-                            continue
-                        }
-                        account_info.userId = account.account.user._id;
-                    }
-					await account.getQuests();
-                    let state = await account.getState();
-                    if(state == 0){
-                        continue
-                    }
-    
-                    let order;
+	//Job start
+	workerQueue.process(2, async (job, done) => {
+        const email = job.data.email;
+		const accountIndex = whiteLists.findIndex((obj => obj.email == email));
+		while(true){
+			let browser = wBrowser[email];
 
-                    if(state.currentState.mission.remainTurn != 0){                    // mission
-                        let mission;
-                        if(account_info.mission == ''){
-                            mission = state.currentState.mission.currentMission
-                        } else {
-                            mission = account_info.mission
-                        }
-                        
-                        order = {
-                            type: 'pve',
-                            email: account_info.email,
-                            password: account_info.password,
-                            mission: mission
-                        };
-    
-                    } else if(state.currentState.pvp.remainTurn != 0){                  // arena
-                        // let opponent = await bestOpponent(account, whiteLists);
-                        let saveOpponents = JSON.parse(await fs.readFile('./opponents.json')); 
+			let waitJob = browser.waitingJob[email];
+			
+			if (waitJob === null){
+				let account = new IdleCyber(email, browser.tmpToken, browser.account);
+				await account.getQuests();
+				try{
+					await browser.exit();
+					console.log(`${email} --- exit`)
+				}catch{}
+				browser.runningJob = 3;
+				break;
+			}
+			
+			if(waitJob == undefined || waitJob == 0){
+				let account = new IdleCyber(email, browser.tmpToken, browser.account);
+				let state = await account.getState();
+				if(state == undefined){
+					await sleep(1000)
+					continue
+				}
 
-                        let opponentIndex = await bestOpponentx(account, state, saveOpponents);
-                        let opponents
-                        if(state.currentState.pvp.opponents){
-                            opponents = state.currentState.pvp.opponents.split(',')
-                        } else {
-                            opponents = [0,0,0]
-                        }                        
-                        
-                        order = {
-                            type: 'pvp',
-                            email: account_info.email,
-                            password: account_info.password,
-                            position: opponentIndex,
-                            opponent: opponents[opponentIndex]
-                        };
-                    }
+				// mission
+				let mission;
+				const missionLeft = state.currentState.mission.remainTurn;
+				const pvpLeft = state.currentState.pvp.remainTurn;
+
+				// console.log(email, missionLeft, pvpLeft);
+				if(whiteLists[accountIndex].mission == ''){
+					mission = state.currentState.mission.currentMission
+				} else {
+					mission = whiteLists[accountIndex].mission
+				}
+						
+				if(missionLeft > 0){
+					browser.waitingJob[email] = missionLeft;
+					browser.campain(mission, email, browser.waitingJob[email]);
+				}else if(pvpLeft > 0){
+					let saveOpponents = JSON.parse(await fs.readFile('./opponents.json')); 
+
+					let opponentIndex  = await bestOpponentx(account, state, saveOpponents);
+					let opponents
+					if(state.currentState.pvp.opponents){
+						opponents = state.currentState.pvp.opponents.split(',')
+					} else {
+						opponents = [0,0,0]
+					}
     
-                    if(order != undefined){
-                        let job = await keyQueue.add(order, { 
-                            removeOnComplete: true
-                        });
-    
-                        browser.waitingJob[account_info.email] = job.id;
-                        console.log(`add ${order.type} order: ${account_info.email} -- id :${browser.waitingJob[account_info.email]}`);
-                        console.log();
-                    }
-                        
-                    //save token
-                    if(account_info.token != account.account.token){
-                        whiteLists = await saveToken(account, whiteLists);
-                    }
-                }
-				console.log(account_info.token);
-            }
-        }
-        await sleep(500)
-    }
+					browser.waitingJob[email] = pvpLeft;
+					browser.arena(opponentIndex, opponents[opponentIndex], email, pvpLeft);
+				}
+
+				if (missionLeft + pvpLeft == 0){
+					browser.waitingJob[email] = null;
+				}
+			}
+			
+			await sleep(1000)
+		}
+		done();
+    });
+	
+	//first run
+	await doJobs(whiteLists, keyQueue);
+
+	//next runs at 7am
+	const job = scheduleJob('7 * * *', async function(){
+		await doJobs(whiteLists, keyQueue);
+		await sleep(1000)
+	});
 })();

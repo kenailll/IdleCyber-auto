@@ -136,18 +136,18 @@ class Browser {
                     //opponent
                     switch (this.opponentIndex) {
                         case 0:
-                            await this.gamePage.mouse.click(140, 590, { button: 'left' });
+                            await this.gamePage.mouse.click(165, 510, { button: 'left' });
                             break;
                         case 1:
-                            await this.gamePage.mouse.click(285, 590, { button: 'left' });
+                            await this.gamePage.mouse.click(285, 510, { button: 'left' });
                             break;
                         case 2:
-                            await this.gamePage.mouse.click(430, 590, { button: 'left' });
+                            await this.gamePage.mouse.click(410, 510, { button: 'left' });
                             break;
                     }
                     await sleep(1000)
                     //fight
-                    await this.gamePage.mouse.click(290, 725, { button: 'left' });
+                    await this.gamePage.mouse.click(295, 600, { button: 'left' });
                     await sleep(1000)
                     this.opponentIndex = null;
                 }
@@ -165,31 +165,30 @@ class Browser {
     
     async login(username, password){
         try {
-			//username
             console.log(`${username} --- login`)
-
+			//username
             await sleep(3000);
-			await this.gamePage.mouse.click(155, 260, { button: 'left' });
+			await this.gamePage.mouse.click(300, 220, { button: 'left' });
 			await sleep(300);
-            await this.gamePage.mouse.click(155, 260, { button: 'left' });
+            await this.gamePage.mouse.click(300, 220, { button: 'left' });
             await sleep(500);
             await this.gamePage.keyboard.type(username)
-            await sleep(2000);
+            await sleep(1000);
 
             //password
-            await this.gamePage.mouse.click(155, 320, { button: 'left' });
+			await this.gamePage.mouse.click(300, 260, { button: 'left' });
 			await sleep(300);
-            await this.gamePage.mouse.click(155, 320, { button: 'left' });
+            await this.gamePage.mouse.click(300, 260, { button: 'left' });
             await sleep(500);
             await this.gamePage.keyboard.type(password)
-            await sleep(500);
+            await sleep(1000);
 
             //login
-            await this.gamePage.mouse.click(300, 410, { button: 'left' });
+            await this.gamePage.mouse.click(300, 350, { button: 'left' });
             await sleep(1000);
     
             //tap to play
-            await this.gamePage.mouse.click(290, 700, { button: 'left' });
+            await this.gamePage.mouse.click(285, 600, { button: 'left' });
 
         } catch (error) {
             console.log(error);
@@ -200,9 +199,9 @@ class Browser {
         try {
 			// console.log('signOut')
             await sleep(2000);
-            await this.gamePage.mouse.click(115, 75, { button: 'left' });
+            await this.gamePage.mouse.click(140, 70, { button: 'left' });
             await sleep(500);
-            await this.gamePage.mouse.click(180, 290, { button: 'left' });
+            await this.gamePage.mouse.click(195, 245, { button: 'left' });
             await sleep(1000);
             this.isLogin = false;
 			this.pveMission = null;
@@ -222,7 +221,7 @@ class Browser {
             console.log(`Start arena --- ${tmpEmail} --- turn: ${this.waitingJob[tmpEmail]}`)
 
             await sleep(1000);
-            await this.gamePage.mouse.click(370, 580, { button: 'left' });
+            await this.gamePage.mouse.click(360, 495, { button: 'left' });
         } catch (error) {
             console.log(error);
         }
@@ -241,18 +240,18 @@ class Browser {
             
             //mission 		
 			await sleep(1000);
-            await this.gamePage.mouse.click(205, 580, { button: 'left' });
+            await this.gamePage.mouse.click(220, 495, { button: 'left' });
 			await sleep(2000);
 
 			//fight
-			await this.gamePage.mouse.click(290, 650, { button: 'left' });
+			await this.gamePage.mouse.click(290, 560, { button: 'left' });
 			await sleep(4000);
 
 			//buy auto
-			await this.gamePage.mouse.click(475, 65, { button: 'left' });
+			await this.gamePage.mouse.click(450, 60, { button: 'left' });
 			await sleep(500);
 
-			await this.gamePage.mouse.click(290, 440, { button: 'left' });
+			await this.gamePage.mouse.click(290, 375, { button: 'left' });
         } catch (error) {
             console.log(error);
         }
@@ -261,9 +260,9 @@ class Browser {
     async backHome() {
         try {
             await sleep(2000);
-            await this.gamePage.mouse.click(107, 730, { button: 'left' });
+            await this.gamePage.mouse.click(140, 600, { button: 'left' });
 			await sleep(1000);
-            await this.gamePage.mouse.click(107, 730, { button: 'left' });
+            await this.gamePage.mouse.click(140, 600, { button: 'left' });
         } catch (error) {
             console.log(error);
         }
@@ -273,7 +272,7 @@ class Browser {
         try {
 			// console.log('endArena')
             await sleep(1000);
-            await this.gamePage.mouse.click(390, 560, { button: 'left' });
+            await this.gamePage.mouse.click(360, 460, { button: 'left' });
 
             //back to main menu
             await this.backHome();
@@ -286,7 +285,7 @@ class Browser {
         try {
 			// console.log('endMission')
             await sleep(1000);
-            await this.gamePage.mouse.click(435, 535, { button: 'left' });
+            await this.gamePage.mouse.click(415, 440, { button: 'left' });
 
             //back to main menu
             await this.backHome();
