@@ -3,13 +3,12 @@ import axios from "axios";
 import { promises as fs } from 'fs'
 
 class IdleCyber {
-	constructor(email, token, accountData) {
+	constructor(email, accountData) {
         this.app = axios.create({
             baseURL: 'https://api.idlecyber.com/',
         });
         this.account = accountData;
         this.email = email;
-        this.account.token = token;
         this.postConfig = {
             headers: {
                 'accept': 'application/json',
@@ -19,8 +18,8 @@ class IdleCyber {
             },
         };
 
-        if(token != '' && token != 0){
-            this.postConfig.headers['x-access-token'] = token;
+        if(this.account.token != '' && this.account.token != 0){
+            this.postConfig.headers['x-access-token'] = this.account.token;
         }
 	}
 
@@ -34,7 +33,7 @@ class IdleCyber {
 					};
 					const qres = await this.app.post(`/quest/claim`, params, this.postConfig);
 					if(qres.data.code == '0'){
-						console.log(`${q.questId} Done Claimed`)	
+						console.log(`${q.questId} Done Claimed`)
 					}
 				}
 			}

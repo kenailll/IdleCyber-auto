@@ -11,23 +11,11 @@ const sleep = function (ms) {
 };
 
 class Browser {
-    constructor(tmpEmail, tmpPassword) {
-        this.tmpEmail = tmpEmail;
-        this.tmpPassword = tmpPassword;
-        
-        this.waitingJob = {};
-        this.runningJob = 0; //0 init, 1 start, 2 running, 3 stopped
-        this.isLogin = false;
-        this.pveMission = null;
-        this.opponentIndex = null;
-        this.opponentId = null;
-		this.tmpToken = null;
-		this.left = null;
-		this.account = null;
-        this.reports = {mIDLE: 0, exp: 0};
-	}
+    constructor() {
+        this.running = false;
+    }
 
-    async launch() {
+    async launch(){
         try {
             this.browser = await puppeteer.launch({
                 args: [
@@ -55,10 +43,7 @@ class Browser {
                 if (response.url() == "https://api.idlecyber.com/user/login" && response.status() == 200){
 
 					const body = await response.json();
-					this.tmpToken = body.data.token;
-					this.isLogin = true;
 					this.account = body.data;
-					this.runningJob = 1;
 				}
             });
 			
@@ -104,12 +89,14 @@ class Browser {
 
                     //log reports
                     let reward_data = await request.response().json();
-                    await this.report(reward_data);
+                    try {
+                        await this.report(reward_data);
+                    } catch (error) {}
                     
-                    console.log(`Order done --- Arena --- ${this.tmpEmail} -- turn: ${this.waitingJob[this.tmpEmail]}`)
+                    console.log(`Order done --- Arena --- ${this.tmpEmail} -- turn: ${this.waitingJob}`)
 					console.log()
 					
-					this.waitingJob[this.tmpEmail] = 0;
+					this.waitingJob = 0;
                 }
                 
                 if (request.url() == 'https://api.idlecyber.com/mission_reward' && request.method() == 'POST'){
@@ -118,16 +105,18 @@ class Browser {
 
                     //log reports
                     let reward_data = await request.response().json();
-                    await this.report(reward_data);
+                    try {
+                        await this.report(reward_data);
+                    } catch (error) {}
 
-					console.log(`Order done --- Mission --- ${this.tmpEmail} -- turn: ${this.waitingJob[this.tmpEmail]}`)
+					console.log(`Order done --- Mission --- ${this.tmpEmail} -- turn: ${this.waitingJob}`)
 					console.log()
-					this.waitingJob[this.tmpEmail] = this.waitingJob[this.tmpEmail] - 1;
+					this.waitingJob = this.waitingJob - 1;
 
-					if(this.waitingJob[this.tmpEmail] < 1){
-						this.waitingJob[this.tmpEmail] = 0;
+					if(this.waitingJob < 1){
+						this.waitingJob = 0;
 					}else{
-						await this.campain(this.pveMission, this.tmpEmail, this.waitingJob[this.tmpEmail]);
+						await this.campain(this.pveMission, this.tmpEmail, this.waitingJob);
 					}
                 }
 
@@ -152,11 +141,30 @@ class Browser {
                     this.opponentIndex = null;
                 }
             });
-
             await this.gamePage.goto('https://play.idlecyber.com/');
             await this.gamePage.waitForSelector('#loading-cover', {hidden : true, timeout: 0});
-            
-            await sleep(5000);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    async init(tmpEmail, tmpPassword){
+        this.running = true;
+
+        this.tmpEmail = tmpEmail;
+        this.tmpPassword = tmpPassword;
+        
+        this.waitingJob = undefined;
+        this.pveMission = null;
+        this.opponentIndex = null;
+        this.opponentId = null;
+		this.tmpToken = null;
+		this.left = null;
+		this.account = null;
+        this.reports = {mIDLE: 0, exp: 0};
+
+        try {
+            await sleep(3000);
 			await this.login(this.tmpEmail, this.tmpPassword)
         } catch (error) {
             console.log(error);
@@ -165,9 +173,9 @@ class Browser {
     
     async login(username, password){
         try {
-			//username
-            console.log(`${username} --- login`)
+            console.log(`${username} --- login`);
 
+			//username
             await sleep(3000);
 			await this.gamePage.mouse.click(155, 260, { button: 'left' });
 			await sleep(300);
@@ -198,28 +206,28 @@ class Browser {
     
     async signOut(){
         try {
-			// console.log('signOut')
+			await this.backHome();
             await sleep(2000);
             await this.gamePage.mouse.click(115, 75, { button: 'left' });
             await sleep(500);
             await this.gamePage.mouse.click(180, 290, { button: 'left' });
             await sleep(1000);
-            this.isLogin = false;
 			this.pveMission = null;
-            await sleep(2000);
+            this.running = false;
+            await sleep(1000);
         } catch (error) {
             console.log(error);
         }
     };
     
-    async arena(opponentIndex, opponentId, tmpEmail, xleft){
+    async arena(opponentIndex, opponentId, tmpEmail, left){
         this.opponentIndex = opponentIndex;
         this.opponentId = opponentId;
         this.tmpEmail = tmpEmail;
-        this.left = xleft;
+        this.left = left;
         try {
 			await this.backHome();
-            console.log(`Start arena --- ${tmpEmail} --- turn: ${this.waitingJob[tmpEmail]}`)
+            console.log(`Start arena --- ${tmpEmail} --- turn: ${this.waitingJob}`)
 
             await sleep(1000);
             await this.gamePage.mouse.click(370, 580, { button: 'left' });
@@ -228,14 +236,14 @@ class Browser {
         }
     };
 
-    async campain(mission, tmpEmail, xleft){
+    async campain(mission, tmpEmail, left){
         this.tmpEmail = tmpEmail;
-        this.left = xleft;
-        this.waitingJob[tmpEmail] = xleft;
+        this.left = left;
+        this.waitingJob = left;
 		
         try {
             await this.backHome();
-			console.log(`Start campain --- ${tmpEmail} --- mission: ${mission} --- turn: ${this.waitingJob[tmpEmail]}`)
+			console.log(`Start campain --- ${tmpEmail} --- mission: ${mission} --- turn: ${this.waitingJob}`)
 			
             this.pveMission = mission;
             
@@ -302,7 +310,7 @@ class Browser {
 
 	async exit(){
         await this.gamePage.close();
-        await this.browser.close();
+        this.running = false;
 	}
 }
 
