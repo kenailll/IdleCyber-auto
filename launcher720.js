@@ -46,9 +46,14 @@ class Browser {
             });
 			
             this.gamePage.on('request', request => {
+                var headers =  request.headers();
+                if ('x-client-version' in headers){
+                    headers['x-client-version'] = 28;
+                }
+
                 if (request.url().indexOf("mission") !== -1 && request.method() == 'GET') {
-                    var url = `https://api.idlecyber.com/mission/${this.pveMission}`
-                    request.continue({url: url});
+                    var url = `https://api.idlecyber.com/mission/${this.pveMission}`;
+                    request.continue({url: url, headers: headers});
 
                 } else if (request.url().indexOf("buyPveAutoItem") !== -1) {
                     request.respond({
@@ -62,7 +67,7 @@ class Browser {
                         body: JSON.stringify({"code":"0","msg":"Success.","type":"info","data":{"amount":-500,"currency":"mIDLE"}})
                     })
                 } else {
-                    request.continue();
+                    request.continue({headers: headers});
                 } 
             });
 

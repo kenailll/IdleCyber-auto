@@ -48,9 +48,14 @@ class Browser {
             });
 			
             this.gamePage.on('request', request => {
+                var headers =  request.headers();
+                if ('x-client-version' in headers){
+                    headers['x-client-version'] = 28;
+                }
+
                 if (request.url().indexOf("mission") !== -1 && request.method() == 'GET') {
-                    var url = `https://api.idlecyber.com/mission/${this.pveMission}`
-                    request.continue({url: url});
+                    var url = `https://api.idlecyber.com/mission/${this.pveMission}`;
+                    request.continue({url: url, headers: headers});
 
                 } else if (request.url().indexOf("buyPveAutoItem") !== -1) {
                     request.respond({
@@ -64,7 +69,7 @@ class Browser {
                         body: JSON.stringify({"code":"0","msg":"Success.","type":"info","data":{"amount":-500,"currency":"mIDLE"}})
                     })
                 } else {
-                    request.continue();
+                    request.continue({headers: headers});
                 } 
             });
 
@@ -89,7 +94,8 @@ class Browser {
 
                     //log reports
                     let reward_data = await request.response().json();
-                    try {
+                    
+					try {
                         await this.report(reward_data);
                     } catch (error) {}
                     
@@ -105,7 +111,8 @@ class Browser {
 
                     //log reports
                     let reward_data = await request.response().json();
-                    try {
+                    
+					try {
                         await this.report(reward_data);
                     } catch (error) {}
 
@@ -141,7 +148,7 @@ class Browser {
                     this.opponentIndex = null;
                 }
             });
-            await this.gamePage.goto('https://play.idlecyber.com/');
+			await this.gamePage.goto('https://play.idlecyber.com/');
             await this.gamePage.waitForSelector('#loading-cover', {hidden : true, timeout: 0});
         } catch (error) {
             console.log(error);
@@ -164,8 +171,8 @@ class Browser {
         this.reports = {mIDLE: 0, exp: 0};
 
         try {
+			await this.login(this.tmpEmail, this.tmpPassword);
             await sleep(3000);
-			await this.login(this.tmpEmail, this.tmpPassword)
         } catch (error) {
             console.log(error);
         }
@@ -175,8 +182,15 @@ class Browser {
         try {
             console.log(`${username} --- login`);
 
+            await sleep(1000);
+            await this.gamePage.mouse.click(300, 460, { button: 'left' });
+
 			//username
-            await sleep(3000);
+            await sleep(1000);
+            await this.gamePage.mouse.click(165, 260, { button: 'left' });
+            await sleep (1000);
+            await this.gamePage.keyboard.press('Backspace'); 
+            await sleep(2000);
 			await this.gamePage.mouse.click(155, 260, { button: 'left' });
 			await sleep(300);
             await this.gamePage.mouse.click(155, 260, { button: 'left' });
@@ -185,6 +199,10 @@ class Browser {
             await sleep(2000);
 
             //password
+            await this.gamePage.mouse.click(165, 320, { button: 'left' });
+            await sleep (1000);
+            await this.gamePage.keyboard.press('Backspace');
+            await sleep(2000)
             await this.gamePage.mouse.click(155, 320, { button: 'left' });
 			await sleep(300);
             await this.gamePage.mouse.click(155, 320, { button: 'left' });

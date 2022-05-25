@@ -7,20 +7,16 @@ import { scheduleJob } from 'node-schedule';
 
 async function doJobs(whiteLists, queue) {
 	for(let account_info of whiteLists){
-		try{
-			let order = {
-				email: account_info.email,
-				password: account_info.password
-			};
-			console.log(order);
-			await queue.add(order, { 
-				removeOnComplete: true,
-				attempts: 5,
-        		backoff: 10000
-			});
-		} catch (error){
-
-		}
+		let order = {
+			email: account_info.email,
+			password: account_info.password
+		};
+		console.log(order);
+		await queue.add(order, { 
+			removeOnComplete: true,
+			attempts: 5,
+			backoff: 10000
+		});
 	}
 }
 
@@ -48,9 +44,6 @@ async function doJobs(whiteLists, queue) {
 			
 			var browser;
 			for(let i=0; i<=thread; i++){
-				if(i == thread){
-					throw 'Browser Error';
-				}
 				if(!browsers[i].running){
 					browsers[i].running = true;
 					browser = browsers[i];
@@ -62,10 +55,32 @@ async function doJobs(whiteLists, queue) {
 			while(true){
 				let waitJob = browser.waitingJob;
 				var account = null;
-				
+				var attempt = 3;
+
 				//try create IdleCyber 3 times (attempt)
-				account = new IdleCyber(email, browser.account);
-	
+				for(let i=0; i<attempt; i++){
+					try {
+						account = new IdleCyber(email, browser.account);
+						break;
+					} catch (error) {
+						await browser.init(email, password);
+					}
+				}
+
+				//if still error after 3 times, add order back to queue
+				if(account === null){
+					browser.running = false;
+					let order = {
+						email: email,
+						password: password
+					};
+					console.log(order);
+					await workerQueue.add(order, { 
+						removeOnComplete: true
+					});
+					break;
+				}
+
 				if (waitJob === null){
 					await account.getQuests();
 					try{
@@ -136,16 +151,6 @@ async function doJobs(whiteLists, queue) {
 			}
 			done();
 		} catch (error) {
-			let order = {
-				email: job.data.email,
-				password: job.data.password
-			};
-			console.log('error', job.data.email, error);
-			await workerQueue.add(order, { 
-				removeOnComplete: true,
-				attempts: 5,
-        		backoff: 10000
-			});
             done(error);
 		}
     });

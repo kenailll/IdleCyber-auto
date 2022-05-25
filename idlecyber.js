@@ -14,7 +14,7 @@ class IdleCyber {
                 'accept': 'application/json',
                 'content-type': 'application/json',
                 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36 Edg/98.0.1108.62',
-                'x-client-version': 27,
+                'x-client-version': 28,
             },
         };
 
@@ -33,7 +33,7 @@ class IdleCyber {
 					};
 					const qres = await this.app.post(`/quest/claim`, params, this.postConfig);
 					if(qres.data.code == '0'){
-						console.log(`${q.questId} Done Claimed`)
+						console.log(`${q.questId} Done Claimed`)	
 					}
 				}
 			}
@@ -248,4 +248,3 @@ function missionDown(mission, step) {
 }
 
 export { IdleCyber, bestOpponent, bestOpponentx, teamCastoff, saveToken, missionDown }
-
